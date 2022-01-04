@@ -6,7 +6,16 @@ import java.util.Comparator;
 import java.util.Scanner;
 import java.util.Vector;
 
+class Process {
 
+    public int startTime;
+    public int runTime;
+
+    public Process(int startTime, int runTime) {
+        this.startTime = startTime;
+        this.runTime = runTime;
+    }
+}
 public class main {
 
     public static Vector<Process> sortedP(Vector<Process> v) {
@@ -76,10 +85,28 @@ public class main {
         return sum / v.size();
     }
 
-//    public static double meanTurnAroundLCFS(Vector<Process> v) {
-//        Vector<Process> sortedPriority = sortedP(v);
-//
-//    }
+    public static double meanTurnAroundLCFS(Vector<Process> v) {
+        Vector<Process> sortedPriority = sortedP(v);
+        int currTime = sortedPriority.get(0).startTime;
+        double sum = 0;
+        while (!sortedPriority.isEmpty()) {
+            int index = maxRunTime(sortedPriority, currTime);
+            if (sortedPriority.get(index).runTime > 0) {
+                sortedPriority.get(index).runTime--;
+                currTime++;
+            } else {
+                sum += currTime - sortedPriority.get(index).startTime;
+                sortedPriority.remove(index);
+                if (sortedPriority.size() != 0) {
+                    index = maxRunTime(sortedPriority, currTime);
+                    if (currTime < sortedPriority.get(index).startTime) {
+                        currTime = sortedPriority.get(index).startTime;
+                    }
+                }
+            }
+        }
+        return sum / v.size();
+    }
 
     public static double meanTurnAroundRR(Vector<Process> v) {
         int size = v.size();
@@ -90,6 +117,9 @@ public class main {
             for (int i = 0; i < sortedPriority.size(); i++) {
                 timeCounter++;
                 Process p = sortedPriority.get(i);
+                if (p.runTime == 0) {
+                    sortedPriority.remove(i);
+                }
                 if (p.startTime <= timeCounter) {
                     p.runTime--;
                     if (p.runTime == 0) {
@@ -130,7 +160,7 @@ public class main {
     }
 
     public static int minRunTime(Vector<Process> v, int time) {
-        int min = 0;
+        int min = Integer.MAX_VALUE;
         int index = 0;
         for (int i = 0; i < v.size(); i++) {
             if (v.get(i).runTime < min && v.get(i).startTime <= time) {
@@ -144,17 +174,21 @@ public class main {
     public static double meanTurnAroundSJF(Vector<Process> v) {
         Vector<Process> sortedPriority = sortedP(v);
         int currTime = sortedPriority.get(0).startTime;
-        int prev = 0;
         double sum = 0;
         while (!sortedPriority.isEmpty()) {
             int index = minRunTime(sortedPriority, currTime);
-            if (index != prev) {
-                prev = index;
-            }
-            sortedPriority.get(prev).runTime--;
-            currTime++;
-            if (sortedPriority.get(prev).runTime == 0) {
-                sortedPriority.remove(prev);
+            if (sortedPriority.get(index).runTime != 0) {
+                sortedPriority.get(index).runTime--;
+                currTime++;
+            } else {
+                sum += currTime - sortedPriority.get(index).startTime;
+                sortedPriority.remove(index);
+                if (sortedPriority.size() != 0) {
+                    index = minRunTime(sortedPriority, currTime);
+                    if (currTime < sortedPriority.get(index).startTime) {
+                        currTime = sortedPriority.get(index).startTime;
+                    }
+                }
             }
         }
         return sum / v.size();
@@ -163,7 +197,8 @@ public class main {
     public static void main(String[] args) {
         Vector<Process> processVector = new Vector<>();
         try {
-            File myObj = new File("C:\\Users\\roey\\IdeaProjects\\OSmatala3\\src\\test\\input1.txt");
+            String path = ".\\src\\test\\";
+            File myObj = new File(path + "input1.txt");
             Scanner myReader = new Scanner(myObj);
             String data = myReader.nextLine();
             int number = Integer.parseInt(data);
@@ -183,8 +218,10 @@ public class main {
         }
 
         System.out.println("FCFS = " + meanTurnAroundFCFS(processVector));
-        System.out.println("LCFS = " + meanTurnAroundLCFSNP(processVector));
+        System.out.println("LCFS(NP) = " + meanTurnAroundLCFSNP(processVector));
+        System.out.println("LCFS(P) = " + meanTurnAroundLCFS(processVector));
         System.out.println("RR = " + meanTurnAroundRR(processVector));
+        System.out.println("SJF = " + meanTurnAroundSJF(processVector));
     }
 }
 
